@@ -191,7 +191,7 @@
     $$ LANGUAGE plpgsql;
     
     CREATE TRIGGER cancelled_requests
-    AFTER INSERT ON canselled_requests
+    BEFORE INSERT ON canselled_requests
     FOR EACH ROW
     EXECUTE FUNCTION check_cancelled_requests();
     
@@ -258,7 +258,7 @@ BEGIN
     $$ LANGUAGE plpgsql;
 
     CREATE TRIGGER unsuccessful_return_deliveries
-    AFTER INSERT ON unsuccessful_return_deliveries
+    BEFORE INSERT ON unsuccessful_return_deliveries
     FOR EACH ROW
     EXECUTE FUNCTION check_unsuccessful_return_deliveries();
 
