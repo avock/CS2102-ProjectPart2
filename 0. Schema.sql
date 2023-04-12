@@ -83,7 +83,7 @@ CREATE TABLE cancelled_requests (
 );
 
 CREATE TABLE unsuccessful_pickups (
-	request_id INTEGER REFERENCES 	(id),
+	request_id INTEGER REFERENCES accepted_requests(id),
 	pickup_id INTEGER,
 	handler_id INTEGER NOT NULL REFERENCES delivery_staff(id),
 	pickup_time TIMESTAMP NOT NULL,

@@ -8,8 +8,11 @@
     reported_width INTEGER[], reported_depth INTEGER[], 
     reported_weight INTEGER[], content TEXT[], 
     estimated_value NUMERIC[]
-    ) AS $$ DECLARE request_id INTEGER;
-    package_id INTEGER;
+    ) AS $$ 
+    
+    DECLARE 
+        curr_request_id INTEGER;
+        package_id INTEGER;
     BEGIN 
         -- Insert delivery request
         INSERT INTO delivery_requests (
@@ -22,17 +25,16 @@
             pickup_addr, pickup_postal, recipient_name, 
             recipient_addr, recipient_postal, 
             submission_time
-        ) RETURNING id INTO request_id;
+        ) RETURNING id INTO curr_request_id;
 
         -- Insert packages for the delivery request
         FOR i IN 1..package_num LOOP 
             INSERT INTO packages (
                 request_id, package_id, reported_height, 
                 reported_width, reported_depth, 
-                reported_weight, content, estimated_value
-                ) 
+                reported_weight, content, estimated_value) 
             VALUES (
-                request_id, i, reported_height[i], 
+                curr_request_id, i, reported_height[i], 
                 reported_width[i], reported_depth[i], 
                 reported_weight[i], content[i], 
                 estimated_value[i]);
@@ -46,8 +48,8 @@
             actual_depth = NULL, 
             actual_weight = NULL 
         WHERE 
-            request_id = request_id;
-        
+            packages.request_id = curr_request_id;
+
         -- Set pickup_date, num_days_needed, and price to NULL for the delivery request
         UPDATE delivery_requests 
         SET 
@@ -55,7 +57,7 @@
             num_days_needed = NULL, 
             price = NULL 
         WHERE 
-            id = request_id;
+            id = curr_request_id;
     END;
     $$ LANGUAGE plpgsql;
 
