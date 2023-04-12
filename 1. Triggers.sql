@@ -191,7 +191,7 @@
     $$ LANGUAGE plpgsql;
     
     CREATE TRIGGER cancelled_requests
-    BEFORE INSERT ON canselled_requests
+    BEFORE INSERT ON cancelled_requests
     FOR EACH ROW
     EXECUTE FUNCTION check_cancelled_requests();
     
