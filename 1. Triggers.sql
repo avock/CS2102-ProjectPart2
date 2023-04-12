@@ -174,6 +174,46 @@
         EXECUTE FUNCTION check_leg_start_and_end_time();
 
 -- unsuccessful deliveries //TODO
--- cancelled requests //TODO
+-- cancelled requests
+    CREATE OR REPLACE FUNCTION check_cancelled_requests()
+    RETURNS TRIGGER AS $$
+    DECLARE
+        sub_time INTEGER;
+    BEGIN
+        SELECT submission_time INTO sub_time
+        FROM delivery_requests
+        WHERE delivery_request.id = NEW.id
+        IF (sub_time IS NOT NULL) AND (sub_time >= NEW.cancel_time) THEN
+            RAISE EXCEPTION 'For cancelled request %, the cancel_time should be after the submission_time of the corresponding delivery request.', NEW.id;
+        END IF;
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    
+    CREATE TRIGGER cancelled_requests
+    AFTER INSERT ON canselled_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION check_cancelled_requests();
+    
 -- return legs //TODO
--- unsuccessful return deliveries //TODO
+-- unsuccessful return deliveries
+    CREATE OR REPLACE FUNCTION check_unsuccessful_return_deliveries()
+    RETURNS TRIGGER AS $$
+    DECLARE
+        s_time INTEGER;
+    BEGIN
+        SELECT start_time INTO s_time
+        FROM return_legs
+        WHERE return_legs.request_id = NEW.request_id
+        IF (s_time IS NOT NULL) AND (s_time >= NEW.attempt_time) THEN
+            RAISE EXCEPTION 'For unsuccessful_return_deliveries %, the attempt_time should be after the start_time of corresponding return_leg.', NEW.request_id;
+        END IF;
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER unsuccessful_return_deliveries
+    AFTER INSERT ON unsuccessful_return_deliveries
+    FOR EACH ROW
+    EXECUTE FUNCTION check_unsuccessful_return_deliveries();
+
