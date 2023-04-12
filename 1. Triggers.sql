@@ -195,7 +195,52 @@
     FOR EACH ROW
     EXECUTE FUNCTION check_cancelled_requests();
     
--- return legs //TODO
+-- return legs 
+CREATE OR REPLACE FUNCTION check_return_legs_insertion()
+RETURNS TRIGGER AS $$
+DECLARE 
+    request_id integer;
+    cancel_time timestamp;
+    existing_end_time timestamp;
+    existing_leg_id integer;
+BEGIN
+    SELECT request_id INTO request_id 
+    FROM legs 
+    WHERE NEW.request_id = legs.request_id
+
+    -- constraint 8 
+    IF NOT EXISTS request_id THEN 
+        RETURN NULL;
+    END IF;
+    
+    -- the return_leg’s start_time should be after the cancel_time of the request (if any).
+    SELECT cancel_time INTO cancel_time FROM cancelled_requests 
+    WHERE NEW.request_id = cancelled_requests.id;
+    IF cancel_time IS NOT NULL AND NEW.start_time < cancel_time THEN
+        RAISE EXCEPTION 'Start time cannot be earlier than cancel time';
+    END IF;
+    -- first leg condition
+    IF NOT EXISTS SELECT 1 from return_legs WHERE NEW.request_id = return_legs.request_id
+        NEW.leg_id = 1 
+        RETURN NEW;
+    END IF;
+    
+    -- from here on, we confirm have an existing leg, trace the existing end time and leg id
+    SELECT leg_id, end_time INTO existing_leg_id, existing_end_time 
+    FROM return_legs 
+    WHERE leg_id = 
+        (SELECT MAX(leg_id) FROM return_legs WHERE NEW.request_id = return_legs.request_id);
+    -- constrain 9
+    IF leg_id = 3 THEN
+        RAISE EXCEPTION 'there can be at most three unsuccessful_return_deliveries.';
+    END IF;
+    IF NEW.start_time < existing_end_time THEN
+        RAISE EXCEPTION 'Start time cannot be earlier than previous end_time';
+    END IF;
+    NEW.leg_id = existing_leg_id + 1
+    RETURN NEW
+
+
 -- unsuccessful return deliveries
     CREATE OR REPLACE FUNCTION check_unsuccessful_return_deliveries()
     RETURNS TRIGGER AS $$
