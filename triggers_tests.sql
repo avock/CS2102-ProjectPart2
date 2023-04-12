@@ -120,7 +120,7 @@
         );
 
 -- legs
-    -- part 1
+    -- Part 1
         -- test with not-starting from 0 and not consecutive integers, should work for both
         INSERT INTO facilities (id, address, postal)
             VALUES (1, '789 Elm St.', '54321');
@@ -140,7 +140,7 @@
         '2023-04-12 16:30:00',
         1
         );
-    -- part 2, 3
+    -- Part 2, 3
         -- change the start_time 
         -- for part2, start_time cannot be before submission_time for that request_id in delivery_requests
         -- for part3, start_time cannot be before pickup_time of the last unsuccesful_pickup for that req_id
@@ -160,7 +160,7 @@
         '2023-04-12 16:30:00',
         1
         );
-    -- part 4
+    -- Part 4
         -- for part 1, try a start_time of leg(N) thats earlier than the end_time of leg(N-1)
         -- for part 2, try an end_time of leg(N-1) thats NULL, then try to insert leg(N)
         INSERT INTO legs (
@@ -180,3 +180,7 @@
         '2023-04-12 16:30:00',
         1
         );
+-- unsuccessful deliveries //TODO
+-- cancelled requests //TODO
+-- return legs //TODO
+-- unsuccessful return deliveries //TODO

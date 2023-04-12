@@ -172,3 +172,8 @@
         AFTER INSERT ON legs
         FOR EACH ROW
         EXECUTE FUNCTION check_leg_start_and_end_time();
+
+-- unsuccessful deliveries //TODO
+-- cancelled requests //TODO
+-- return legs //TODO
+-- unsuccessful return deliveries //TODO
