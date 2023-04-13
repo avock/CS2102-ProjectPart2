@@ -41,7 +41,35 @@
         ORDER BY start_time ASC;
     END;
     $$ LANGUAGE plpgsql;
+
 -- get_top_delivery_persons //TODO
+    CREATE OR REPLACE FUNCTION get_top_delivery_person(k INTEGER)
+    RETURNS TABLE (
+        employee_id INTEGER
+    )
+    AS $$
+    BEGIN
+        RETURN QUERY
+            SELECT employee_id
+            FROM (
+                SELECT employee_id, COUNT(*) as trip_count
+                FROM (
+                    SELECT legs.handler_id as employee_id
+                    FROM legs
+                    UNION ALL
+                    SELECT return_legs.handler_id as employee_id
+                    FROM return_legs
+                    UNION ALL
+                    SELECT unsuccessful_pickups.handler_id as employee_id
+                    FROM unsuccessful_pickups 
+                ) trips
+                GROUP BY employee_id
+                ORDER BY trip_count DESC, employee_id ASC
+                LIMIT k
+            ) top_delivery_persons;
+    END;
+    $$ LANGUAGE plpgsql;
+
 -- get_top_connections //TODO
 CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
 RETURNS TABLE 

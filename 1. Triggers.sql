@@ -174,6 +174,37 @@
         EXECUTE FUNCTION check_leg_start_and_end_time();
 
 -- unsuccessful deliveries //TODO
+    CREATE OR REPLACE FUNCTION check_unsuccessful_deliveries()
+    RETURNS TRIGGER AS $$
+    DECLARE 
+        start_time TIMESTAMP;
+        unsuccessful_time TIMESTAMP;
+        unsuccessful_count INTEGER;
+    BEGIN
+        -- Get the start time of the corresponding leg
+        SELECT start_time INTO start_time
+        FROM legs
+        WHERE request_id = NEW.request_id AND leg_id = NEW.leg_id;
+
+        -- Constraint 5: Check if the unsuccessful delivery timestamp is after the start time
+        IF NEW.attempt_time < start_time THEN
+            RAISE EXCEPTION 'The timestamp of unsuccessful_delivery % should be after the start_time of the corresponding leg.', NEW.request_id;
+        END IF;
+
+        -- Count the number of unsuccessful deliveries for the request
+        SELECT COUNT(*) INTO unsuccessful_count
+        FROM unsuccessful_deliveries
+        WHERE request_id = NEW.request_id;
+
+        -- Constraint 6: Check if there are more than three unsuccessful deliveries for the request
+        IF unsuccessful_count > 3 THEN
+            RAISE EXCEPTION 'For delivery request %, there can be at most three unsuccessful_deliveries.', NEW.request_id;
+        END IF;
+
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    
 -- cancelled requests
     CREATE OR REPLACE FUNCTION check_cancelled_requests()
     RETURNS TRIGGER AS $$
