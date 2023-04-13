@@ -235,7 +235,7 @@ DECLARE
 BEGIN
     SELECT MAX(leg_id) INTO max_existing_leg_id
     FROM return_legs
-    WHERE return_legs.request_id = NEW.request_id
+    WHERE return_legs.request_id = NEW.request_id;
 
     IF max_existing_leg_id IS NULL THEN
         IF NEW.leg_id <> 1 THEN
@@ -251,14 +251,13 @@ BEGIN
 
     RETURN NEW;
 END;
-END;
 $$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER check_return_leg_id_consistency
 BEFORE INSERT ON return_legs
 FOR EACH ROW
-EXECUTE FUNCTION return_leg_id_consistency()
+EXECUTE FUNCTION return_leg_id_consistency();
 -- trigger 8
 CREATE OR REPLACE FUNCTION consistency_return_legs_insertion()
 RETURNS TRIGGER AS $$
@@ -270,18 +269,18 @@ DECLARE
 BEGIN
     SELECT request_id INTO existing_request_id 
     FROM legs 
-    WHERE legs.request_id = NEW.request_id
+    WHERE legs.request_id = NEW.request_id;
 
     -- 
     IF existing_request_id IS NULL THEN
         RAISE EXCEPTION 'Request ID does not exist in legs table';
     END IF;
 
-    SELECT leg_id, end_time INTO existing_leg_id, last_existing_end_time 
+    SELECT leg_id, end_time INTO existing_leg_id, last_existing_leg_end_time 
     FROM return_legs 
     WHERE leg_id = 
         (SELECT MAX(leg_id) FROM return_legs WHERE NEW.request_id = return_legs.request_id)
-    AND NEW.request_id = return_legs.request_id
+    AND NEW.request_id = return_legs.request_id;
 
     -- If there is no existing leg, then the start time must be after the end time of the last leg
     IF existing_leg_id IS NOT NULL THEN
@@ -293,7 +292,7 @@ BEGIN
     --addition, the return_leg’s start_time should be after the cancel_time of the request (if any).
     SELECT cancel_time INTO existing_cancel_time
     FROM cancelled_requests
-    WHERE cancelled_requests.request_id = NEW.request_id
+    WHERE cancelled_requests.request_id = NEW.request_id;
 
     IF existing_cancel_time IS NOT NULL THEN
         IF NEW.start_time < existing_cancel_time THEN
@@ -310,7 +309,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER check_consistency_return_legs_insertion
 BEFORE INSERT ON return_legs
 FOR EACH ROW
-EXECUTE FUNCTION consistency_return_legs_insertion()
+EXECUTE FUNCTION consistency_return_legs_insertion();
 
 
 -- trigger 9
@@ -336,7 +335,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER check_at_most_three_unsuccessful_return_deliveries
 BEFORE INSERT ON return_legs
 FOR EACH ROW
-EXECUTE FUNCTION at_most_three_unsuccessful_return_deliveries()
+EXECUTE FUNCTION at_most_three_unsuccessful_return_deliveries();
 
 
 
@@ -348,7 +347,8 @@ EXECUTE FUNCTION at_most_three_unsuccessful_return_deliveries()
     BEGIN
         SELECT start_time INTO s_time
         FROM return_legs
-        WHERE return_legs.request_id = NEW.request_id
+        WHERE return_legs.request_id = NEW.request_id;
+		
         IF (s_time IS NOT NULL) AND (s_time >= NEW.attempt_time) THEN
             RAISE EXCEPTION 'For unsuccessful_return_deliveries %, the attempt_time should be after the start_time of corresponding return_leg.', NEW.request_id;
         END IF;
