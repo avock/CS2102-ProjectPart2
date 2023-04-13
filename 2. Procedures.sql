@@ -63,3 +63,16 @@
 
 -- resubmit_requests //TODO
 -- insert_leg //TODO
+    CREATE OR REPLACE FUNCTION insert_leg(request_id INTEGER, handler_id INTEGER, start_time TIMESTAMP, destination_facility INTEGER)
+    $$
+    DECLARE
+        leg_id INTEGER;
+    BEGIN
+        SELECT COALESCE(MAX(leg_id), 0) + 1 INTO leg_id 
+        FROM legs 
+        WHERE legs.request_id = request_id;
+
+        INSERT INTO legs (request_id, leg_id, handler_id, start_time, source_facility, end_time)
+        VALUES (request_id, leg_id, handler_id, start_time, destination_facility, NULL);
+    END;
+    $$ LANGUAGE plpgsql;
