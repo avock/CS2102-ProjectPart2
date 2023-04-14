@@ -282,22 +282,7 @@
                 RAISE EXCEPTION 'There is no existing leg for delivery request ID=%', NEW.request_ID;
             END IF;
 
-            -- -- If there is no existing leg, then the start time must be after the end time of the last leg
-            -- SELECT leg_id, end_time INTO existing_leg_id, last_existing_leg_end_time 
-            -- FROM return_legs 
-            -- WHERE leg_id = 
-            --     (SELECT MAX(leg_id) FROM return_legs WHERE NEW.request_id = return_legs.request_id)
-            -- AND NEW.request_id = return_legs.request_id;
-
-            -- IF existing_leg_id IS NOT NULL THEN
-            --     IF NEW.start_time < last_existing_leg_end_time THEN
-            --         RAISE EXCEPTION 'Start time must be after the end time of the last return leg';
-            --     END IF;
-            -- END IF;
-			
-			-- IMPORTANT
-			-- CK's understanding
-			-- start time of RETURN LEG must be afer end time of the LATEST LEG (not return leg)
+            -- Last existing leg’s end_time should not be after the start_time of the return_leg
 			SELECT end_time INTO last_existing_leg_end_time 
 			FROM legs
 			WHERE request_id = NEW.request_id
