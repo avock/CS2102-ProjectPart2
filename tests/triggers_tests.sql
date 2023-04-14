@@ -241,13 +241,17 @@
             destination_facility
             ) VALUES (
             1,
-            2,
+            4,
             1,
             '2023-04-12 16:00:00',
             '2023-04-12 16:30:00',
             1
             );
         -- same as before, but try to include more than 3 
--- cancelled requests //TODO
+-- cancelled requests
+    insert into cancelled_requests (id, cancel_time)
+    values (1, 
+    -- would fail here, as the timestamp is ≤ the subm_time
+    '2023-04-12 15:30:00');
 -- return legs //TODO
 -- unsuccessful return deliveries //TODO

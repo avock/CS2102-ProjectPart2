@@ -214,11 +214,11 @@
     CREATE OR REPLACE FUNCTION check_cancelled_requests()
     RETURNS TRIGGER AS $$
     DECLARE
-        sub_time INTEGER;
+        sub_time TIMESTAMP;
     BEGIN
         SELECT submission_time INTO sub_time
         FROM delivery_requests
-        WHERE delivery_request.id = NEW.id
+        WHERE delivery_request.id = NEW.id;
         IF (sub_time IS NOT NULL) AND (sub_time >= NEW.cancel_time) THEN
             RAISE EXCEPTION 'For cancelled request %, the cancel_time should be after the submission_time of the corresponding delivery request.', NEW.id;
         END IF;
