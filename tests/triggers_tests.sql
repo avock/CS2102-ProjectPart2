@@ -223,7 +223,31 @@
         '2023-04-12 16:30:00',
         1
         );
--- unsuccessful deliveries //TODO
+-- unsuccessful deliveries
+    -- part 1
+        INSERT INTO unsuccessful_deliveries (request_id, leg_id, reason, attempt_time)
+        -- should fail, as the timestamp is before the start_time of the corresponding leg 
+        VALUES (1, 1, 'Wrong address', 
+            -- change this part, the timestamp
+            '2023-04-12 15:59:00');
+    -- part 2
+        -- insert an extra leg
+            INSERT INTO legs (
+            request_id,
+            leg_id,
+            handler_id,
+            start_time,
+            end_time,
+            destination_facility
+            ) VALUES (
+            1,
+            2,
+            1,
+            '2023-04-12 16:00:00',
+            '2023-04-12 16:30:00',
+            1
+            );
+        -- same as before, but try to include more than 3 
 -- cancelled requests //TODO
 -- return legs //TODO
 -- unsuccessful return deliveries //TODO
