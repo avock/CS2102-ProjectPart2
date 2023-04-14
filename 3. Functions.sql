@@ -43,7 +43,7 @@
     $$ LANGUAGE plpgsql;
 
 -- get_top_delivery_persons
-    CREATE OR REPLACE FUNCTION get_top_delivery_person(k INTEGER)
+    CREATE OR REPLACE FUNCTION get_top_delivery_persons(k INTEGER)
     RETURNS TABLE (
         employee_id INTEGER
     )
