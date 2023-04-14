@@ -33,7 +33,8 @@
     ('Mary Johnson', 'female', '1990-02-02', 'Coordinator', 3000.00),
     ('Tom Jones', 'male', '1985-03-03', 'Driver', 2000.00),
     ('Sarah Lee', 'female', '1995-04-04', 'Driver', 4000.00),
-    ('Denzel Ong', 'male', '2000-01-24', 'Runner', 4200.00);
+    ('Denzel Ong', 'male', '2000-01-24', 'Runner', 4200.00),
+    ('Denzel WANG', 'female', '2000-01-24', 'Runner', 4500.00);
 
     INSERT INTO delivery_requests (customer_id, evaluater_id, status, pickup_addr, pickup_postal, recipient_name, 
     recipient_addr, recipient_postal, submission_time, pickup_date, num_days_needed, price) VALUES 
@@ -76,5 +77,5 @@
     (5, 1, 1, '2023-04-12 15:29:00'),
     (6, 2, 5, '2023-04-12 15:29:00');
 
-
+    SELECT * FROM get_top_delivery_persons(6)
 -- get_top_connections //TODO
