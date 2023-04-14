@@ -50,7 +50,7 @@
     AS $$
     BEGIN
         RETURN QUERY
-            SELECT delivery_staff.id as employee_id, COUNT(trips.handler_id) as trip_count
+            SELECT delivery_staff.id as employee_id
             FROM (
                 SELECT handler_id
                 FROM legs
@@ -63,8 +63,8 @@
             ) trips
             RIGHT JOIN delivery_staff ON trips.handler_id = delivery_staff.id
             GROUP BY delivery_staff.id
-            ORDER BY trip_count DESC, delivery_staff.id ASC
-            LIMIT k
+            ORDER BY COALESCE(COUNT(trips.handler_id), 0) DESC, delivery_staff.id ASC
+            LIMIT k;
     END;
     $$ LANGUAGE plpgsql;
 
