@@ -68,114 +68,37 @@
     END;
     $$ LANGUAGE plpgsql;
 
--- get_top_connections 
-    -- version1
-        CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
-        RETURNS TABLE (
-            source_facility_id INTEGER, 
-            destination_facility_id INTEGER
-        ) AS $$
-        BEGIN
-            -- leg 1 -> leg 2 -> leg 3
-            -- faci1 -> faci2 -> faci3 
-            -- faci1 . faci2
-            -- faci2 . faci3
-            RETURN QUERY
-            SELECT r2.source_facility_id, r2.destination_facility_id
-            FROM (
-                SELECT r.source_facility_id, r.destination_facility_id, COUNT(*) as occur
-                FROM (
-                    SELECT 
-                    A.destination_facility as source_facility_id, 
-                    B.destination_facility as destination_facility_id
-                    FROM legs A, legs B
-                    WHERE A.request_id = B.request_id
-                    AND A.leg_id = (B.leg_id - 1)
-                    -- Might not be needed 
-                    --AND A.end_time = B.start_time
+-- get_top_connections
+CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
+RETURNS TABLE (
+    source_facility_id INTEGER, 
+    destination_facility_id INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT r2.source_facility_id, r2.destination_facility_id
+    FROM (
+        SELECT r.source_facility_id, r.destination_facility_id, COUNT(*) as occur
+        FROM (
+            SELECT 
+            A.destination_facility as source_facility_id, 
+            B.destination_facility as destination_facility_id
+            FROM legs A, legs B
+            WHERE A.request_id = B.request_id
+            AND A.leg_id = (B.leg_id - 1)
+            UNION ALL
 
-                    UNION ALL
-
-                    SELECT 
-                    A.source_facility as source_facility_id, 
-                    B.source_facility as destination_facility_id 
-                    FROM return_legs A, return_legs B
-                    WHERE A.request_id = B.request_id
-                    AND A.leg_id = (B.leg_id - 1)
-                    -- Might not be needed 
-                    --AND A.end_time = B.start_time
-                ) as r
-                WHERE r.source_facility_id IS NOT NULL AND r.destination_facility_id IS NOT NULL
-                GROUP BY r.source_facility_id, r.destination_facility_id
-                ORDER BY occur DESC, r.source_facility_id ASC, r.destination_facility_id ASC
-                LIMIT k
-            ) as r2;
-        END;
-        $$ LANGUAGE plpgsql;
-
-    -- version2
-        CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
-        RETURNS TABLE 
-        (
-            source_facility_id INTEGER, 
-            destination_facility_id INTEGER
-        ) AS $$
-        BEGIN
-            -- leg 1 -> leg 2 -> leg 3
-            -- faci1 -> faci2 -> faci3 
-            -- faci1 . faci2
-            -- faci2 . faci3
-            RETURN QUERY
-            
-            SELECT r.source_facility_id, r.destination_facility_id
-            FROM
-            (
-                SELECT 
-                A.destination_facility as source_facility_id, 
-                B.destination_facility as destination_facility_id
-                FROM legs A, legs B
-                WHERE A.request_id = B.request_id
-                AND A.leg_id = (B.leg_id - 1)
-                AND A.destination_facility <> NULL
-                AND B.destination_facility <> NULL
-                
-                UNION ALL
-
-                SELECT 
-                A.source_facility as source_facility_id, 
-                B.source_facility as destination_facility_id 
-                FROM return_legs A, return_legs B
-                WHERE A.request_id = B.request_id
-                AND A.leg_id = (B.leg_id - 1)
-                AND A.source_facility <> NULL
-                AND B.source_facility <> NULL
-            ) as r
-            GROUP BY r.source_facility_id, r.destination_facility_id
-            ORDER BY COUNT(*) DESC, r.source_facility_id ASC, r.destination_facility_id ASC 
-            LIMIT k;
-        END;
-        $$ LANGUAGE plpgsql;
-
-    -- version3
-    CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
-    RETURNS TABLE (source_facility_id INTEGER, destination_facility_id INTEGER) AS $$
-    BEGIN
-        RETURN QUERY
-            SELECT source_facility, destination_facility
-            FROM (
-                SELECT source_facility, destination_facility, COUNT(*) AS occurrences
-                FROM (
-                    SELECT source_facility, destination_facility
-                    FROM legs
-                    WHERE source_facility IS NOT NULL AND destination_facility IS NOT NULL
-                    UNION ALL
-                    SELECT source_facility, destination_facility
-                    FROM return_legs
-                    WHERE source_facility IS NOT NULL AND destination_facility IS NOT NULL
-                ) AS connections
-                GROUP BY source_facility, destination_facility
-            ) AS connection_counts
-            ORDER BY occurrences DESC, source_facility, destination_facility
-            LIMIT k;
-    END;
-    $$ LANGUAGE plpgsql;
+            SELECT 
+            A.source_facility as source_facility_id, 
+            B.source_facility as destination_facility_id 
+            FROM return_legs A, return_legs B
+            WHERE A.request_id = B.request_id
+            AND A.leg_id = (B.leg_id - 1)
+        ) as r
+        WHERE r.source_facility_id IS NOT NULL AND r.destination_facility_id IS NOT NULL
+        GROUP BY r.source_facility_id, r.destination_facility_id
+        ORDER BY occur DESC, r.source_facility_id ASC, r.destination_facility_id ASC
+        LIMIT k
+    ) as r2;
+END;
+$$ LANGUAGE plpgsql;
