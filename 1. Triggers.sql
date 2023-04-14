@@ -356,7 +356,7 @@
     CREATE OR REPLACE FUNCTION check_unsuccessful_return_deliveries()
     RETURNS TRIGGER AS $$
     DECLARE
-        s_time TIMESPAMP;
+        s_time TIMESTAMP;
     BEGIN
         SELECT start_time INTO s_time
         FROM return_legs
