@@ -220,7 +220,7 @@
         FROM delivery_requests
         WHERE delivery_request.id = NEW.id;
         IF (sub_time IS NOT NULL) AND (sub_time >= NEW.cancel_time) THEN
-            RAISE EXCEPTION 'For cancelled request %, the cancel_time should be after the submission_time of the corresponding delivery request.', NEW.id;
+            RAISE EXCEPTION 'For cancelled request ID=%, the cancel_time should be after the submission_time of the corresponding delivery request.', NEW.id;
         END IF;
         RETURN NEW;
     END;
@@ -352,7 +352,7 @@
         WHERE return_legs.request_id = NEW.request_id;
 		
         IF (s_time IS NOT NULL) AND (s_time >= NEW.attempt_time) THEN
-            RAISE EXCEPTION 'For unsuccessful_return_deliveries %, the attempt_time should be after the start_time of corresponding return_leg.', NEW.request_id;
+            RAISE EXCEPTION 'For unsuccessful_return_deliveries ID=%, the attempt_time should be after the start_time of corresponding return_leg.', NEW.request_id;
         END IF;
         RETURN NEW;
     END;
