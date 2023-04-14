@@ -62,31 +62,32 @@
     $$ LANGUAGE plpgsql;
 
 -- resubmit_requests 
-    CREATE OR REPLACE PROCEDURE resubmit_request(request_id INTEGER, evaluator_id INTEGER, submission_time TIMESTAMP, reported_height INTEGER[] , reported_width INTEGER[], reported_depth INTEGER[], reported_weight INTEGER[])AS $$
-
+    CREATE OR REPLACE PROCEDURE resubmit_request(request_id INTEGER, evaluator_id INTEGER, submission_time TIMESTAMP, reported_height INTEGER[] , reported_width INTEGER[], reported_depth INTEGER[], reported_weight INTEGER[])
+    AS $$
     DECLARE
-        count INTEGER
-        r_id INTEGER
-        cus_id INTEGER
-        pu_addr TEXT
-        pu_postal TEXT
-        reci_name TEXT
-        reci_addr TEXT
-        reci_postal TEXT
-        con TEXT
+        count INTEGER;
+        r_id INTEGER;
+        cus_id INTEGER;
+        pu_addr TEXT;
+        pu_postal TEXT;
+        reci_name TEXT;
+        reci_addr TEXT;
+        reci_postal TEXT;
+        con TEXT;
         est_value NUMERIC;
     BEGIN
         SELECT customer_id, pickup_addr, pickup_postal, recipient_name, recipient_addr, recipient_postal INTO cus_id, pu_addr, pu_postal, reci_name, reci_addr, reci_postal
         FROM delivery_requests
-        WHERE delivery_requests.id = request_id;
-        
+        WHERE delivery_requests.id = resubmit_request.request_id;
+
         SELECT COUNT(*) INTO count
         FROM packages
-        WHERE packages.request_id = request_id
-        
+        WHERE packages.request_id = resubmit_request.request_id;
+
         INSERT INTO delivery_requests (customer_id, evaluater_id, status, pickup_addr, pickup_postal, recipient_name, recipient_addr, recipient_postal, submission_time)
-        VALUES (cus_id, evaluator_id, 'submitted', pu_addr, pu_postal, reci_name, reci_addr, reci_postal, submission_time) RETURNING id INTO r_id;
-        
+        VALUES (cus_id, evaluator_id, 'submitted', pu_addr, pu_postal, reci_name, reci_addr, reci_postal, submission_time) 
+        RETURNING id INTO r_id;
+
         FOR i IN 1..count LOOP
             UPDATE packages as p
             SET request_id = r_id,
@@ -98,14 +99,14 @@
                 actual_width = NULL,
                 actual_depth = NULL,
                 actual_weight = NULL
-           WHERE p.request_id = r_id;
+            WHERE p.request_id = r_id;
         END LOOP;
 
         -- Set pickup_date, num_days_needed, and price to NULL for the delivery request
         UPDATE delivery_requests
         SET pickup_date = NULL, num_days_needed = NULL, price = NULL
         WHERE id = r_id;
-        
+
         END;
     $$ LANGUAGE plpgsql;
 
