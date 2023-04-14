@@ -99,7 +99,7 @@
                 actual_width = NULL,
                 actual_depth = NULL,
                 actual_weight = NULL
-            WHERE p.request_id = r_id;
+            WHERE p.request_id = resubmit_request.request_id AND p.package_id = i;
         END LOOP;
 
         -- Set pickup_date, num_days_needed, and price to NULL for the delivery request
