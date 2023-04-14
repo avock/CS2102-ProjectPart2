@@ -253,17 +253,37 @@
     values (1, 
     -- would fail here, as the timestamp is ≤ the subm_time
     '2023-04-12 15:30:00');
--- return legs //TODO
--- unsuccessful return deliveries
-    
+-- return legs 
     -- some initializations
-    insert into cancelled_or_unsuccessful_requests
-    values (1);
+        insert into cancelled_or_unsuccessful_requests
+        values (1);
 
-    INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
-    VALUES (1, 1, 1, '2023-04-12 15:30:00', 1);
+        INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
+        VALUES (1, 1, 1, '2023-04-12 15:30:00', 1);
 
-    -- the test
+        INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
+        VALUES (1, 2, 1, '2023-04-12 15:30:00', 1);
+    -- part 1
+        INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
+        VALUES (1, 
+            -- 5 should fail as it is not consecutive
+            5, 1, '2023-04-12 15:30:00', 1);
+
+    -- part 2
+        -- 2.1: no existing leg for delivery_request
+            -- remove all legs from legs first
+            -- then do : (should fail as there is no legs)
+            INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
+            VALUES (1, 4, 1, 
+            -- change the timestamp here, the previous return leg's end_time has to be inserted though, not NULL
+            '2023-04-12 15:31:00', 1);
+        -- 2.2: last leg end_time > return_leg start_time
+        INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
+        VALUES (1, 1, 1, 
+        '2023-04-12 16:31:00', 1);
+    -- part 3
+
+-- unsuccessful return deliveries
     INSERT INTO unsuccessful_return_deliveries (request_id, leg_id, reason, attempt_time)
     VALUES (1, 1, 'Delivery unsuccessful', 
         -- this part should fail as it's before the start_time of the return delivery
