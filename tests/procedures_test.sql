@@ -1,4 +1,12 @@
 -- ALL PROCEDURE TESTS ARE INDEPENDENT OF EACH OTHER
+-- useful commands
+    -- delete all rows from tables
+        TRUNCATE customers, employees, delivery_staff, delivery_requests, packages, accepted_requests, cancelled_or_unsuccessful_requests, cancelled_requests, unsuccessful_pickups, facilities, legs, unsuccessful_deliveries, return_legs, unsuccessful_return_deliveries CASCADE;
+    -- restart serial ID for each table
+        alter sequence customers_id_seq restart with 1;
+        alter sequence delivery_requests_id_seq restart with 1;
+        alter sequence employees_id_seq restart with 1;
+        alter sequence facilities_id_seq restart with 1;
 
 -- submit requests 
     -- insert one dummy customer and employee
@@ -49,14 +57,17 @@
      INSERT INTO delivery_requests (customer_id, evaluater_id, status, pickup_addr, pickup_postal,
      recipient_name, recipient_addr, recipient_postal, submission_time, pickup_date,
      num_days_needed, price) VALUES (3, 1, 'submitted', '31 Summerfront Link', '685687', 'Jon Kit',
-     '23 Toa Payoh Drive', '434257', '2022-05-06 17:20:39', '2022-05-07', 3, 5.00)
+     '23 Toa Payoh Drive', '434257', '2022-05-06 17:20:39', '2022-05-07', 3, 5.00);
 
      INSERT INTO packages VALUES
      (1, 1, 10.0, 5.0, 5.0, 1.0, 'Book', 20.0, 10.0, 5.0, 5.0, 1.0),
      (1, 2, 20.0, 10.0, 10.0, 2.0, 'DVD', 30.0, 20.0, 10.0, 10.0, 2.0),
      (1, 3, 10, 20, 30, 2, 'T-shirt', 42.0, 10, 20, 30, 2),
-     (1, 4, 5, 15, 25, 1.5, 'Coffee Mug', 15.0, 5, 15, 25, 1.5)
+     (1, 4, 5, 15, 25, 1.5, 'Coffee Mug', 15.0, 5, 15, 25, 1.5);
 
+    -- after calling this, the delivery_request table should all be updated to request_id 2, eval_id 2, 
+    --    submission_time 2022-01-01 12:00:00, pickupdate daysneeded price NULL, rest unchanged
+    -- for packages, id++, all reported dimensions updates, content and value unchanged, actual dimensions all set to NULL
      CALL resubmit_request(1, 2, '2022-01-01 12:00:00', ARRAY[1,2,3,4], ARRAY[5,6,7,8], ARRAY[9,10,11,12], ARRAY[13,14,15,16])
 
 -- insert_leg 

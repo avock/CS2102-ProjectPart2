@@ -250,8 +250,7 @@
             
 
     -- part 3
-        
-
+    
 -- unsuccessful return deliveries
     INSERT INTO unsuccessful_return_deliveries (request_id, leg_id, reason, attempt_time)
     VALUES (1, 1, 'Delivery unsuccessful', 

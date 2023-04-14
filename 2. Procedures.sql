@@ -89,18 +89,22 @@
         RETURNING id INTO r_id;
 
         FOR i IN 1..count LOOP
-            UPDATE packages as p
-            SET request_id = r_id,
-                reported_height = resubmit_request.reported_height[i],
-                reported_width = resubmit_request.reported_width[i],
-                reported_depth = resubmit_request.reported_depth[i],
-                reported_weight = resubmit_request.reported_weight[i],
-                actual_height = NULL,
-                actual_width = NULL,
-                actual_depth = NULL,
-                actual_weight = NULL
-            WHERE p.request_id = resubmit_request.request_id AND p.package_id = i;
-        END LOOP;
+			INSERT INTO packages (request_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value)
+			SELECT r_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value
+			FROM packages
+			WHERE request_id = request_id AND package_id = i;
+
+			UPDATE packages
+			SET reported_height = resubmit_request.reported_height[i],
+				reported_width = resubmit_request.reported_width[i],
+				reported_depth = resubmit_request.reported_depth[i],
+				reported_weight = resubmit_request.reported_weight[i],
+				actual_height = NULL,
+				actual_width = NULL,
+				actual_depth = NULL,
+				actual_weight = NULL
+			WHERE request_id = r_id AND package_id = i;
+		END LOOP;
 
         -- Set pickup_date, num_days_needed, and price to NULL for the delivery request
         UPDATE delivery_requests
