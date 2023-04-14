@@ -1,3 +1,9 @@
+-- some useful queries
+    alter sequence customers_id_seq restart with 1;
+    alter sequence delivery_requests_id_seq restart with 1;
+    alter sequence employees_id_seq restart with 1;
+    alter sequence facilities_id_seq restart with 1;
+
 -- delivery requests
     INSERT INTO customers(name, gender, mobile)
     VALUES ('Jane Doe', 'female', '555-5555');
@@ -41,28 +47,65 @@
     200
     );
 
--- packages
-    -- same as before, but try using packages with non-consecutive package_id
--- unsuccesful pickups 
-    -- part 1
-    insert into delivery_staff 
-        values (1);
+    -- Insert a delivery request with no package, should prompt error
+    INSERT INTO delivery_requests 
+    VALUES (
+    1,
+    1,
+    1,
+    'submitted',
+    '123 Main St.',
+    '12345',
+    'John Smith',
+    '456 Elm St.',
+    '67890',
+    '2023-04-12 15:30:00'
+    );
 
-    INSERT INTO accepted_requests (id, card_number, payment_time, monitor_id)
-        VALUES (1, '1234-5678-9012-3456', '2023-04-12 16:00:00', 1);
-
-    --  repeat this multiple times, then try using packages with non-consecutive package_ids
-    INSERT INTO unsuccessful_pickups (
-    request_id, 
-    pickup_id, 
-    handler_id, 
-    pickup_time
+    -- inserts corrseponding package
+    INSERT INTO packages (
+    request_id,
+    package_id,
+    reported_height,
+    reported_width,
+    reported_depth,
+    reported_weight,
+    content,
+    estimated_value
     ) VALUES (
     1,
     1,
-    1,
-    '2023-04-12 15:35:00'
+    10,
+    20,
+    30,
+    50,
+    'Clothes',
+    200
     );
+
+-- packages
+    -- same as before, but try using packages with non-consecutive package_id
+
+-- unsuccesful pickups 
+    -- part 1
+        insert into delivery_staff 
+            values (1);
+
+        INSERT INTO accepted_requests (id, card_number, payment_time, monitor_id)
+            VALUES (1, '1234-5678-9012-3456', '2023-04-12 16:00:00', 1);
+
+        --  repeat this multiple times, then try using packages with non-consecutive package_ids
+        INSERT INTO unsuccessful_pickups (
+        request_id, 
+        pickup_id, 
+        handler_id, 
+        pickup_time
+        ) VALUES (
+        1,
+        1,
+        1,
+        '2023-04-12 15:35:00'
+        );
 
     --  part 2
        -- just test using consecutive package_ids, but change the time to maybe a minute before    
@@ -168,7 +211,7 @@
         leg_id,
         handler_id,
         start_time,
-        end_time
+        end_time,
         destination_facility
         ) VALUES (
         1,

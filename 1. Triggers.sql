@@ -29,7 +29,7 @@
             RAISE EXCEPTION 'Package IDs for delivery request % must start from 1.', NEW.request_id;
         END IF;
         IF (last_package_id IS NOT NULL) AND (last_package_id != NEW.package_id - 1) THEN
-            RAISE EXCEPTION 'Package IDs for delivery request % must be consecutive integers.', NEW.request_id;
+            RAISE EXCEPTION 'Package IDs for delivery request % must be consecutive integers. The latest packages ID for this delivery request is %', NEW.request_id, last_package_id;
         END IF;
         RETURN NEW;
     END;
@@ -63,13 +63,13 @@
 
 
         -- Check if the current pickup timestamp is after the submission_time of the corresponding delivery request
-        IF NEW.pickup_time < (SELECT submission_time FROM delivery_requests WHERE id = NEW.request_id) THEN
+        IF NEW.pickup_time <= (SELECT submission_time FROM delivery_requests WHERE id = NEW.request_id) THEN
             RAISE EXCEPTION 'Unsuccessful pickup timestamps for delivery request % must be after the submission time of the corresponding delivery request.', NEW.request_id;
         END IF;
 
         -- Check if the current pickup timestamp is after the previous pickup timestamp (if any)
-        IF (last_pickup_time IS NOT NULL) AND (last_pickup_time < NEW.pickup_time) THEN
-            RAISE EXCEPTION 'Unsuccessful pickup timestamps for delivery request % must be ordered.', NEW.request_id;
+        IF (last_pickup_time IS NOT NULL) AND (last_pickup_time <= NEW.pickup_time) THEN
+            RAISE EXCEPTION 'Unsuccessful pickup timestamps for delivery request % must be after the previous one.', NEW.request_id;
         END IF;
 
         RETURN NEW;
