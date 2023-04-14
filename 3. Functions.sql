@@ -50,7 +50,7 @@
     AS $$
     BEGIN
         RETURN QUERY
-            SELECT id, COUNT(trips.handler_id) as trip_count
+            SELECT delivery_staff.id as employee_id, COUNT(trips.handler_id) as trip_count
             FROM (
                 SELECT handler_id
                 FROM legs
@@ -61,9 +61,9 @@
                 SELECT handler_id
                 FROM unsuccessful_pickups 
             ) trips
-            RIGHT JOIN employees ON trips.handler_id = employees.id
-            GROUP BY employees.id
-            ORDER BY trip_count DESC, employees.id ASC
+            RIGHT JOIN delivery_staff ON trips.handler_id = delivery_staff.id
+            GROUP BY delivery_staff.id
+            ORDER BY trip_count DESC, delivery_staff.id ASC
             LIMIT k
     END;
     $$ LANGUAGE plpgsql;
