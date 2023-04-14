@@ -66,7 +66,6 @@
 
     DECLARE
         count INTEGER
-        old_id SERIAL
         r_id INTEGER
         cus_id INTEGER
         pu_addr TEXT
@@ -77,34 +76,35 @@
         con TEXT
         est_value NUMERIC;
     BEGIN
-        SELECT id, customer_id, pickup_addr, pickup_postal, recipient_name, recipient_addr, recipient_postal INTO old_id, cus_id, pu_addr, pu_postal, reci_name, reci_addr, reci_postal
+        SELECT customer_id, pickup_addr, pickup_postal, recipient_name, recipient_addr, recipient_postal INTO cus_id, pu_addr, pu_postal, reci_name, reci_addr, reci_postal
         FROM delivery_requests
         WHERE delivery_requests.id = request_id;
         
         SELECT COUNT(*) INTO count
         FROM packages
-        WHERE packages.request_id = old_id
-        GROUP BY packages.request_id;
+        WHERE packages.request_id = request_id
         
         INSERT INTO delivery_requests (customer_id, evaluater_id, status, pickup_addr, pickup_postal, recipient_name, recipient_addr, recipient_postal, submission_time)
         VALUES (cus_id, evaluator_id, 'submitted', pu_addr, pu_postal, reci_name, reci_addr, reci_postal, submission_time) RETURNING id INTO r_id;
         
         FOR i IN 1..count LOOP
-            SELECT content, estimated_value INTO cont, est_value
-            FROM packages
-            WHERE packages.request_id = old_id AND package_id = i
-            ORDER BY package_id;
-            INSERT INTO packages (request_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value)
-            VALUES (r_id, i, reported_height[i], reported_width[i], reported_depth[i], reported_weight[i], cont, est_value);
-            
-        UPDATE packages
-        SET actual_height = NULL,actual_width = NULL, actual_depth = NULL,actual_weight = NULL
-        WHERE request_id = request_id;
+            UPDATE packages as p
+            SET request_id = r_id,
+                reported_height = resubmit_request.reported_height[i],
+                reported_width = resubmit_request.reported_width[i],
+                reported_depth = resubmit_request.reported_depth[i],
+                reported_weight = resubmit_request.reported_weight[i],
+                actual_height = NULL,
+                actual_width = NULL,
+                actual_depth = NULL,
+                actual_weight = NULL
+           WHERE p.request_id = r_id;
+        END LOOP;
 
         -- Set pickup_date, num_days_needed, and price to NULL for the delivery request
         UPDATE delivery_requests
         SET pickup_date = NULL, num_days_needed = NULL, price = NULL
-        WHERE id = request_id;
+        WHERE id = r_id;
         
         END;
     $$ LANGUAGE plpgsql;
