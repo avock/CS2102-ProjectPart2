@@ -110,8 +110,8 @@
                 WHERE r.source_facility_id IS NOT NULL AND r.destination_facility_id IS NOT NULL
                 GROUP BY r.source_facility_id, r.destination_facility_id
                 ORDER BY occur DESC, r.source_facility_id ASC, r.destination_facility_id ASC
-                LIMIT k;
-            ) as r2 
+                LIMIT k
+            ) as r2;
         END;
         $$ LANGUAGE plpgsql;
 
