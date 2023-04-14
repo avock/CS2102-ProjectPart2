@@ -16,43 +16,6 @@
     VALUES (
     1,
     1,
-    1,
-    'submitted',
-    '123 Main St.',
-    '12345',
-    'John Smith',
-    '456 Elm St.',
-    '67890',
-    '2023-04-12 15:30:00'
-    );
-
-    -- inserts corrseponding package
-    INSERT INTO packages (
-    request_id,
-    package_id,
-    reported_height,
-    reported_width,
-    reported_depth,
-    reported_weight,
-    content,
-    estimated_value
-    ) VALUES (
-    1,
-    1,
-    10,
-    20,
-    30,
-    50,
-    'Clothes',
-    200
-    );
-
-    -- Insert a delivery request with no package, should prompt error
-    INSERT INTO delivery_requests 
-    VALUES (
-    1,
-    1,
-    1,
     'submitted',
     '123 Main St.',
     '12345',
@@ -278,10 +241,16 @@
             -- change the timestamp here, the previous return leg's end_time has to be inserted though, not NULL
             '2023-04-12 15:31:00', 1);
         -- 2.2: last leg end_time > return_leg start_time
-        INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
-        VALUES (1, 1, 1, 
-        '2023-04-12 16:31:00', 1);
+            INSERT INTO return_legs (request_id, leg_id, handler_id, start_time, source_facility)
+            VALUES (1, 1, 1, 
+            '2023-04-12 16:31:00', 1);
+        -- 2.3: return_leg's start_time has to be after cancel time
+            -- remove all from legs and return_legs
+            -- then:
+            
+
     -- part 3
+        
 
 -- unsuccessful return deliveries
     INSERT INTO unsuccessful_return_deliveries (request_id, leg_id, reason, attempt_time)

@@ -111,16 +111,15 @@
     $$ LANGUAGE plpgsql;
 
 -- insert_leg 
-    CREATE OR REPLACE FUNCTION insert_leg(request_id INTEGER, handler_id INTEGER, start_time TIMESTAMP, destination_facility INTEGER)
-    $$
+    CREATE OR REPLACE PROCEDURE insert_leg(request_id INTEGER, handler_id INTEGER, start_time TIMESTAMP, destination_facility INTEGER) AS $$
     DECLARE
-        leg_id INTEGER;
+        curr_leg_id INTEGER;
     BEGIN
-        SELECT COALESCE(MAX(leg_id), 0) + 1 INTO leg_id 
+        SELECT COALESCE(MAX(legs.leg_id), 0) + 1 INTO curr_leg_id 
         FROM legs 
-        WHERE legs.request_id = request_id;
+        WHERE legs.request_id = insert_leg.request_id;
 
-        INSERT INTO legs (request_id, leg_id, handler_id, start_time, source_facility, end_time)
-        VALUES (request_id, leg_id, handler_id, start_time, destination_facility, NULL);
+        INSERT INTO legs (request_id, leg_id, handler_id, start_time, destination_facility, end_time)
+        VALUES (request_id, curr_leg_id, handler_id, start_time, destination_facility, NULL);
     END;
     $$ LANGUAGE plpgsql;

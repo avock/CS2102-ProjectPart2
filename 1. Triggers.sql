@@ -343,13 +343,14 @@
                 RAISE EXCEPTION 'For delivery request ID=%, there can be at most 3 unsuccessful_return_deliveries.', NEW.request_id;
             END IF;
             RETURN NEW;
+
         END;
         $$ LANGUAGE plpgsql;
 
-    CREATE TRIGGER check_at_most_three_unsuccessful_return_deliveries
-    BEFORE INSERT ON return_legs
-    FOR EACH ROW
-    EXECUTE FUNCTION at_most_three_unsuccessful_return_deliveries();
+        CREATE TRIGGER check_at_most_three_unsuccessful_return_deliveries
+        BEFORE INSERT ON return_legs
+        FOR EACH ROW
+        EXECUTE FUNCTION at_most_three_unsuccessful_return_deliveries();
 
 -- unsuccessful return deliveries
     CREATE OR REPLACE FUNCTION check_unsuccessful_return_deliveries()
