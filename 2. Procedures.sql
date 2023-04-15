@@ -1,15 +1,15 @@
 -- submit requests 
     CREATE OR REPLACE PROCEDURE submit_request(
-    customer_id INTEGER, evaluator_id INTEGER, 
-    pickup_addr TEXT, pickup_postal TEXT, 
-    recipient_name TEXT, recipient_addr TEXT, 
-    recipient_postal TEXT, submission_time TIMESTAMP, 
-    package_num INTEGER, reported_height INTEGER[], 
-    reported_width INTEGER[], reported_depth INTEGER[], 
-    reported_weight INTEGER[], content TEXT[], 
-    estimated_value NUMERIC[]
+        customer_id INTEGER, evaluator_id INTEGER, 
+        pickup_addr TEXT, pickup_postal TEXT, 
+        recipient_name TEXT, recipient_addr TEXT, 
+        recipient_postal TEXT, submission_time TIMESTAMP, 
+        package_num INTEGER, reported_height INTEGER[], 
+        reported_width INTEGER[], reported_depth INTEGER[], 
+        reported_weight INTEGER[], content TEXT[], 
+        estimated_value NUMERIC[]
     ) AS $$ 
-    
+
     DECLARE 
         curr_request_id INTEGER;
         package_id INTEGER;
@@ -89,22 +89,22 @@
         RETURNING id INTO r_id;
 
         FOR i IN 1..count LOOP
-			INSERT INTO packages (request_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value)
-			SELECT r_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value
-			FROM packages
-			WHERE request_id = request_id AND package_id = i;
+            INSERT INTO packages (request_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value)
+            SELECT r_id, package_id, reported_height, reported_width, reported_depth, reported_weight, content, estimated_value
+            FROM packages
+            WHERE request_id = request_id AND package_id = i;
 
-			UPDATE packages
-			SET reported_height = resubmit_request.reported_height[i],
-				reported_width = resubmit_request.reported_width[i],
-				reported_depth = resubmit_request.reported_depth[i],
-				reported_weight = resubmit_request.reported_weight[i],
-				actual_height = NULL,
-				actual_width = NULL,
-				actual_depth = NULL,
-				actual_weight = NULL
-			WHERE request_id = r_id AND package_id = i;
-		END LOOP;
+            UPDATE packages
+            SET reported_height = resubmit_request.reported_height[i],
+                reported_width = resubmit_request.reported_width[i],
+                reported_depth = resubmit_request.reported_depth[i],
+                reported_weight = resubmit_request.reported_weight[i],
+                actual_height = NULL,
+                actual_width = NULL,
+                actual_depth = NULL,
+                actual_weight = NULL
+            WHERE request_id = r_id AND package_id = i;
+        END LOOP;
 
         -- Set pickup_date, num_days_needed, and price to NULL for the delivery request
         UPDATE delivery_requests

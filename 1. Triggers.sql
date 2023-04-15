@@ -2,10 +2,10 @@
     CREATE OR REPLACE FUNCTION check_delivery_requests()
     RETURNS TRIGGER AS $$
     BEGIN
-        IF NOT EXISTS (SELECT 1 FROM packages WHERE request_id = NEW.id) THEN
-            RAISE EXCEPTION 'Each delivery request must have at least one package.';
-        END IF;
-        RETURN NEW;
+    IF NOT EXISTS (SELECT 1 FROM packages WHERE request_id = NEW.id) THEN
+        RAISE EXCEPTION 'Each delivery request must have at least one package.';
+    END IF;
+    RETURN NEW;
     END;
     $$ LANGUAGE plpgsql;
 
@@ -117,9 +117,9 @@
                 WHERE (id = NEW.request_id);
             
             IF (NEW.leg_id = 1) THEN
-            IF (NEW.start_time <= subm_time) THEN
-                RAISE EXCEPTION 'Invalid start time for first leg, start_time of first leg must be after the time the delivery request was placed';
-            END IF;
+                IF (NEW.start_time <= subm_time) THEN
+                    RAISE EXCEPTION 'Invalid start time for first leg, start_time of first leg must be after the time the delivery request was placed';
+                END IF;
             END IF;
             RETURN NEW;
         END;
@@ -150,6 +150,7 @@
         AFTER INSERT ON legs
         FOR EACH ROW
         EXECUTE FUNCTION check_first_leg_start_time2();
+
     -- Part 4
         CREATE OR REPLACE FUNCTION check_leg_start_and_end_time()
         RETURNS TRIGGER AS $$
@@ -186,7 +187,7 @@
         FROM legs
         WHERE request_id = NEW.request_id AND leg_id = NEW.leg_id;
 
-        -- Constraint 5: Check if the unsuccessful delivery timestamp is after the start time
+        -- Constraint 8: Check if the unsuccessful delivery timestamp is after the start time
         IF NEW.attempt_time < curr_start_time THEN
             RAISE EXCEPTION 'The timestamp of unsuccessful_delivery for delivery_requst % should be after the start_time of the corresponding leg.', NEW.request_id;
         END IF;
@@ -196,7 +197,7 @@
         FROM unsuccessful_deliveries
         WHERE request_id = NEW.request_id;
 
-        -- Constraint 6: Check if there are more than three unsuccessful deliveries for the request
+        -- Constraint 9: Check if there are more than three unsuccessful deliveries for the request
         IF unsuccessful_count >= 3 THEN
             RAISE EXCEPTION 'For delivery request ID=%, there is currently % unsuccesful deliveries. There can be at most 3 unsuccessful_deliveries for each delivery_request.', NEW.request_id, unsuccessful_count;
         END IF;
@@ -209,7 +210,7 @@
     BEFORE INSERT ON unsuccessful_deliveries
     FOR EACH ROW
     EXECUTE FUNCTION check_unsuccessful_deliveries();
-    
+
 -- cancelled requests
     CREATE OR REPLACE FUNCTION check_cancelled_requests()
     RETURNS TRIGGER AS $$
@@ -225,14 +226,14 @@
         RETURN NEW;
     END;
     $$ LANGUAGE plpgsql;
-    
+
     CREATE TRIGGER cancelled_requests
     BEFORE INSERT ON cancelled_requests
     FOR EACH ROW
     EXECUTE FUNCTION check_cancelled_requests();
-    
+
 -- return legs 
-    -- trigger 7
+    -- trigger 11
         CREATE OR REPLACE FUNCTION return_leg_id()
         RETURNS TRIGGER AS $$
         DECLARE 
@@ -244,7 +245,7 @@
 
             IF max_return_leg_id IS NULL THEN
                 IF NEW.leg_id <> 1 THEN
-                    RAISE EXCEPTION 'First leg ID must be 1';
+                    RAISE EXCEPTION 'First return_leg ID must be 1';
                 END IF;
             END IF;
 
@@ -263,8 +264,8 @@
         FOR EACH ROW
         EXECUTE FUNCTION return_leg_id();
 
-    -- trigger 8
-        CREATE OR REPLACE FUNCTION consistency_return_legs_insertion()
+    -- trigger 12
+        CREATE OR REPLACE FUNCTION check_consistency_return_legs_insertion()
         RETURNS TRIGGER AS $$
         DECLARE 
             existing_request_id INTEGER;
@@ -272,25 +273,25 @@
             existing_leg_id INTEGER;
             existing_cancel_time TIMESTAMP;
         BEGIN
-		
-			-- There are no existing legs for this delivery_request_ID
+
+            -- There are no existing legs for this delivery_request_ID
             SELECT request_id INTO existing_request_id 
             FROM legs 
             WHERE legs.request_id = NEW.request_id;
-           
+            
             IF existing_request_id IS NULL THEN
                 RAISE EXCEPTION 'There is no existing leg for delivery request ID=%', NEW.request_ID;
             END IF;
 
             -- Last existing leg’s end_time should not be after the start_time of the return_leg
-			SELECT end_time INTO last_existing_leg_end_time 
-			FROM legs
-			WHERE request_id = NEW.request_id
-			ORDER BY leg_id DESC LIMIT 1;
-			
-			IF (last_existing_leg_end_time IS NOT NULL) AND (NEW.start_time <= last_existing_leg_end_time) THEN
-        		RAISE EXCEPTION 'The start_time of a return leg cannot be earlier than the end_time of the last leg.';
-			END IF;		
+            SELECT end_time INTO last_existing_leg_end_time 
+            FROM legs
+            WHERE request_id = NEW.request_id
+            ORDER BY leg_id DESC LIMIT 1;
+            
+            IF (last_existing_leg_end_time IS NOT NULL) AND (NEW.start_time <= last_existing_leg_end_time) THEN
+                RAISE EXCEPTION 'The start_time of a return leg cannot be earlier than the end_time of the last leg.';
+            END IF;		
 
             -- The return_leg’s start_time should be after the cancel_time of the request (if any).
             SELECT cancel_time INTO existing_cancel_time
@@ -308,11 +309,12 @@
         END;
         $$ LANGUAGE plpgsql;
 
-        CREATE TRIGGER check_consistency_return_legs_insertion
+        CREATE TRIGGER consistency_return_legs_insertion
         BEFORE INSERT ON return_legs
         FOR EACH ROW
-        EXECUTE FUNCTION consistency_return_legs_insertion();
-    -- trigger 9
+        EXECUTE FUNCTION check_consistency_return_legs_insertion();
+
+    -- trigger 13
         CREATE OR REPLACE FUNCTION at_most_three_unsuccessful_return_deliveries()
         RETURNS TRIGGER AS $$
         DECLARE 
@@ -323,7 +325,6 @@
             FROM unsuccessful_return_deliveries
             WHERE unsuccessful_return_deliveries.request_id = NEW.request_id;
 
-            -- Constraint 6: Check if there are more than three unsuccessful deliveries for the request
             IF unsuccessful_count >= 3 THEN
                 RAISE EXCEPTION 'For delivery request ID=%, there can be at most 3 unsuccessful_return_deliveries.', NEW.request_id;
             END IF;
@@ -346,7 +347,7 @@
         SELECT start_time INTO s_time
         FROM return_legs
         WHERE return_legs.request_id = NEW.request_id;
-		
+        
         IF (s_time IS NOT NULL) AND (s_time >= NEW.attempt_time) THEN
             RAISE EXCEPTION 'For unsuccessful_return_deliveries ID=%, the attempt_time should be after the start_time of corresponding return_leg.', NEW.request_id;
         END IF;

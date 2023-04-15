@@ -9,7 +9,7 @@
         alter sequence facilities_id_seq restart with 1;
 
 -- view_trajectory //TODO
--- get_top_delivery_persons //TODO
+-- get_top_delivery_persons 
 
     INSERT INTO customers (name, gender, mobile) VALUES
      ('Chao Yung', 'male', '94235612'),
