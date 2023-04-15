@@ -1,46 +1,41 @@
 -- view_trajectory
-    CREATE OR REPLACE FUNCTION view_trajectory(request_id INTEGER)
-    RETURNS TABLE (
-        source_addr TEXT,
-        destination_addr TEXT,
-        start_time TIMESTAMP,
-        end_time TIMESTAMP
+CREATE OR REPLACE FUNCTION view_trajectory (request_id INTEGER)
+RETURNS TABLE (source_address TEXT, destination_address TEXT, start_time TIMESTAMP, end_time TIMESTAMP)
+AS $$
+BEGIN
+	RETURN QUERY 
+    WITH return_legs_path AS (
+        SELECT 
+        l1_f.address as source_address,
+        COALESCE(l2_f.address, (SELECT pickup_addr FROM delivery_requests WHERE delivery_requests.id = view_trajectory.request_id)) as destination_address,
+        l1.start_time,
+        l1.end_time
+        FROM return_legs as l1
+            LEFT OUTER JOIN return_legs as l2 ON l1.request_id = l2.request_id AND l1.leg_id = l2.leg_id - 1
+            FULL OUTER JOIN facilities as l2_f ON l2_f.id = l2.source_facility
+            FULL OUTER JOIN facilities as l1_f ON l1_f.id = l1.source_facility
+        WHERE l1.request_id = view_trajectory.request_id
+    ), legs_path AS (
+        SELECT
+        COALESCE(l1_f.address, (SELECT pickup_addr FROM delivery_requests WHERE delivery_requests.id = view_trajectory.request_id)) as source_address,
+        COALESCE(l2_f.address, (SELECT recipient_addr FROM delivery_requests WHERE delivery_requests.id = view_trajectory.request_id)) as destination_address,
+        l2.start_time,
+        l2.end_time
+        FROM legs as l1
+            FULL OUTER JOIN legs as l2 ON l1.request_id = l2.request_id AND l1.leg_id = l2.leg_id - 1
+            FULL OUTER JOIN facilities as l2_f ON l2_f.id = l2.destination_facility
+            FULL OUTER JOIN facilities as l1_f ON l1_f.id = l1.destination_facility
+        WHERE l2.request_id = view_trajectory.request_id
     )
-    AS $$
-    BEGIN
-        RETURN QUERY
-        
-        SELECT 
-            pickup_addr AS source_addr,
-            recipient_addr AS destination_addr,
-            submission_time AS start_time,
-            (SELECT MIN(start_time) FROM legs WHERE request_id = delivery_requests.id) AS end_time
-        FROM delivery_requests
-        WHERE id = request_id
-        
-        UNION
-        
-        SELECT 
-            legs.source_addr,
-            legs.destination_addr,
-            legs.start_time,
-            legs.end_time
-        FROM legs
-        WHERE request_id = request_id
-        
-        UNION
-        
-        SELECT 
-            return_legs.source_addr,
-            return_legs.destination_addr,
-            return_legs.start_time,
-            return_legs.end_time
-        FROM return_legs
-        WHERE request_id = request_id
-        
-        ORDER BY start_time ASC;
-    END;
-    $$ LANGUAGE plpgsql;
+	
+    (SELECT * 
+    FROM (
+        (SELECT * FROM legs_path) 
+        UNION 
+        (SELECT * FROM return_legs_path)) t 
+    ORDER BY start_time ASC);
+END
+$$ LANGUAGE plpgsql;
 
 -- get_top_delivery_persons
     CREATE OR REPLACE FUNCTION get_top_delivery_persons(k INTEGER)
