@@ -64,36 +64,36 @@
     $$ LANGUAGE plpgsql;
 
 -- get_top_connections
-CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
-RETURNS TABLE (
-    source_facility_id INTEGER, 
-    destination_facility_id INTEGER
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT r2.source_facility_id, r2.destination_facility_id
-    FROM (
-        SELECT r.source_facility_id, r.destination_facility_id, COUNT(*) as occur
+    CREATE OR REPLACE FUNCTION get_top_connections(k INTEGER) 
+    RETURNS TABLE (
+        source_facility_id INTEGER, 
+        destination_facility_id INTEGER
+    ) AS $$
+    BEGIN
+        RETURN QUERY
+        SELECT r2.source_facility_id, r2.destination_facility_id
         FROM (
-            SELECT 
-            A.destination_facility as source_facility_id, 
-            B.destination_facility as destination_facility_id
-            FROM legs A, legs B
-            WHERE A.request_id = B.request_id
-            AND A.leg_id = (B.leg_id - 1)
-            UNION ALL
+            SELECT r.source_facility_id, r.destination_facility_id, COUNT(*) as occur
+            FROM (
+                SELECT 
+                A.destination_facility as source_facility_id, 
+                B.destination_facility as destination_facility_id
+                FROM legs A, legs B
+                WHERE A.request_id = B.request_id
+                AND A.leg_id = (B.leg_id - 1)
+                UNION ALL
 
-            SELECT 
-            A.source_facility as source_facility_id, 
-            B.source_facility as destination_facility_id 
-            FROM return_legs A, return_legs B
-            WHERE A.request_id = B.request_id
-            AND A.leg_id = (B.leg_id - 1)
-        ) as r
-        WHERE r.source_facility_id IS NOT NULL AND r.destination_facility_id IS NOT NULL
-        GROUP BY r.source_facility_id, r.destination_facility_id
-        ORDER BY occur DESC, r.source_facility_id ASC, r.destination_facility_id ASC
-        LIMIT k
-    ) as r2;
-END;
-$$ LANGUAGE plpgsql;
+                SELECT 
+                A.source_facility as source_facility_id, 
+                B.source_facility as destination_facility_id 
+                FROM return_legs A, return_legs B
+                WHERE A.request_id = B.request_id
+                AND A.leg_id = (B.leg_id - 1)
+            ) as r
+            WHERE r.source_facility_id IS NOT NULL AND r.destination_facility_id IS NOT NULL
+            GROUP BY r.source_facility_id, r.destination_facility_id
+            ORDER BY occur DESC, r.source_facility_id ASC, r.destination_facility_id ASC
+            LIMIT k
+        ) as r2;
+    END;
+    $$ LANGUAGE plpgsql;
