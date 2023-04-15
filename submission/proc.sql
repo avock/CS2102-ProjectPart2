@@ -235,7 +235,7 @@
 
     -- return legs 
         -- trigger 11
-            CREATE OR REPLACE FUNCTION return_leg_id()
+            CREATE OR REPLACE FUNCTION check_return_leg_id()
             RETURNS TRIGGER AS $$
             DECLARE 
                 max_return_leg_id INTEGER;
@@ -260,10 +260,10 @@
             END;
             $$ LANGUAGE plpgsql;
 
-            CREATE TRIGGER check_return_leg_id
+            CREATE TRIGGER return_leg_id
             BEFORE INSERT ON return_legs
             FOR EACH ROW
-            EXECUTE FUNCTION return_leg_id();
+            EXECUTE FUNCTION check_return_leg_id();
 
         -- trigger 12
             CREATE OR REPLACE FUNCTION check_consistency_return_legs_insertion()
@@ -316,7 +316,7 @@
             EXECUTE FUNCTION check_consistency_return_legs_insertion();
 
         -- trigger 13
-            CREATE OR REPLACE FUNCTION at_most_three_unsuccessful_return_deliveries()
+            CREATE OR REPLACE FUNCTION check_at_most_three_unsuccessful_return_deliveries()
             RETURNS TRIGGER AS $$
             DECLARE 
                 unsuccessful_count INTEGER;
@@ -334,10 +334,10 @@
             END;
             $$ LANGUAGE plpgsql;
 
-            CREATE TRIGGER check_at_most_three_unsuccessful_return_deliveries
+            CREATE TRIGGER at_most_three_unsuccessful_return_deliveries
             BEFORE INSERT ON return_legs
             FOR EACH ROW
-            EXECUTE FUNCTION at_most_three_unsuccessful_return_deliveries();
+            EXECUTE FUNCTION check_at_most_three_unsuccessful_return_deliveries();
 
     -- unsuccessful return deliveries
         CREATE OR REPLACE FUNCTION check_unsuccessful_return_deliveries()
